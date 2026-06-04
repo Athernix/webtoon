@@ -1,0 +1,39 @@
+package com.example.vantink.data.local.dao
+
+import androidx.room.*
+import com.example.vantink.data.local.entity.FavoriteEntity
+import com.example.vantink.data.local.entity.HistoryEntity
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface WebtoonDao {
+
+    // Favorites
+    @Query("SELECT * FROM favorites ORDER BY addedDate DESC")
+    fun getFavorites(): Flow<List<FavoriteEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFavorite(favorite: FavoriteEntity)
+
+    @Delete
+    suspend fun deleteFavorite(favorite: FavoriteEntity)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE id = :webtoonId)")
+    fun isFavorite(webtoonId: String): Flow<Boolean>
+
+    // History
+    @Query("SELECT * FROM history ORDER BY lastReadDate DESC")
+    fun getHistory(): Flow<List<HistoryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHistory(history: HistoryEntity)
+
+    @Query("SELECT * FROM history WHERE webtoonId = :webtoonId")
+    suspend fun getHistoryForWebtoon(webtoonId: String): HistoryEntity?
+
+    @Query("DELETE FROM history WHERE webtoonId = :webtoonId")
+    suspend fun deleteHistory(webtoonId: String)
+
+    @Query("DELETE FROM history")
+    suspend fun clearHistory()
+}

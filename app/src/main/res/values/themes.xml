@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.VantInk" parent="Theme.MaterialComponents.Light" />
+</resources>

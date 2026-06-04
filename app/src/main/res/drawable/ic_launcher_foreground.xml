@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized 'V' for VantInk, representing slanted comic panels -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M31,26.5 L52,71.5 L42,71.5 L21,26.5 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M77,26.5 L56,71.5 L66,71.5 L87,26.5 Z" />
+    <!-- Ink drop symbol -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,75.5 a 3,3 0 1,0 0,6 a 3,3 0 1,0 0,-6" />
+</vector>
