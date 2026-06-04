@@ -11,8 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +29,7 @@ fun FavoritesScreen(
     viewModel: FavoritesViewModel,
     onWebtoonClick: (String) -> Unit
 ) {
-    val favorites by viewModel.favorites.collectAsState()
+    val favorites by viewModel.favorites.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -68,7 +68,7 @@ fun HistoryScreen(
     onWebtoonClick: (String) -> Unit,
     onChapterClick: (String, String) -> Unit
 ) {
-    val history by viewModel.history.collectAsState()
+    val history by viewModel.history.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

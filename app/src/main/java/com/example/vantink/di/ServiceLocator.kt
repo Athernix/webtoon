@@ -2,7 +2,6 @@ package com.example.vantink.di
 
 import android.content.Context
 import com.example.vantink.data.local.AppDatabase
-import com.example.vantink.data.remote.KeiyoushiApiService
 import com.example.vantink.data.remote.MangaDexApiService
 import com.example.vantink.data.remote.metadata.AniListApiService
 import com.example.vantink.data.repository.ExtensionRepositoryImpl
@@ -73,7 +72,8 @@ object ServiceLocator {
                 db.webtoonDao,
                 db.downloadDao,
                 db.sourceDao,
-                db.repositoryDao
+                db.repositoryDao,
+                db.activeExtensionDao
             )
             repository = instance
             instance
@@ -83,14 +83,14 @@ object ServiceLocator {
     fun getExtensionRepository(context: Context): ExtensionRepository {
         return extensionRepository ?: synchronized(this) {
             val db = getDatabase(context)
-            val api = Retrofit.Builder()
-                .baseUrl(KeiyoushiApiService.BASE_URL)
+            val retrofit = Retrofit.Builder()
                 .client(client)
                 .addConverterFactory(MoshiConverterFactory.create())
-                .build()
-                .create(KeiyoushiApiService::class.java)
+            val aniListApi = retrofit.baseUrl(AniListApiService.BASE_URL).build().create(AniListApiService::class.java)
+            val mangaDexApi = retrofit.baseUrl(MangaDexApiService.BASE_URL).build().create(MangaDexApiService::class.java)
+            val sourceFactory = SourceFactory(aniListApi, mangaDexApi)
 
-            val instance = ExtensionRepositoryImpl(api, db.activeExtensionDao)
+            val instance = ExtensionRepositoryImpl(client, sourceFactory, db.activeExtensionDao)
             extensionRepository = instance
             instance
         }

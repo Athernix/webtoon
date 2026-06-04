@@ -30,7 +30,10 @@ class DownloadWorker(
             val pagesResult = repository.getChapterDetails(chapterId)
             val pages = pagesResult.getOrNull()?.pages ?: return Result.failure()
             
-            val baseDir = File(applicationContext.filesDir, "downloads/${webtoonId}/${chapterId}")
+            val baseDir = File(
+                applicationContext.filesDir,
+                "downloads/${webtoonId.toSafePathSegment()}/${chapterId.toSafePathSegment()}"
+            )
             if (!baseDir.exists()) baseDir.mkdirs()
             
             pages.forEachIndexed { index, urlString ->
@@ -62,5 +65,9 @@ class DownloadWorker(
             db.downloadDao.updateDownload(download.copy(status = "ERROR"))
             Result.failure() // Use failure instead of retry for now to avoid loops on 403
         }
+    }
+
+    private fun String.toSafePathSegment(): String {
+        return replace(Regex("[^A-Za-z0-9._-]"), "_").take(120)
     }
 }

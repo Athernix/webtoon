@@ -10,6 +10,9 @@ data class Extension(
     val iconUrl: String,
     val apkUrl: String,
     val nsfw: Boolean,
+    val sourceType: String = "madara",
+    val isMetaProvider: Boolean = false,
+    val isDirectory: Boolean = false,
     val installedVersion: String? = null,
     val isActive: Boolean = false
 )

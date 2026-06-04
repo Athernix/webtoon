@@ -19,7 +19,7 @@ import com.example.vantink.data.local.entity.HistoryEntity
         com.example.vantink.data.local.entity.RepositoryEntity::class,
         ActiveExtensionEntity::class
     ],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

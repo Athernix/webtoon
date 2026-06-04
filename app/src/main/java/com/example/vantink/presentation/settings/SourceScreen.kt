@@ -1,5 +1,7 @@
 package com.example.vantink.presentation.settings
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Sync
@@ -60,6 +63,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,6 +90,7 @@ fun SourceScreen(
     val activeExtensions by viewModel.activeExtensions.collectAsStateWithLifecycle()
     val exploreQuery by viewModel.exploreQuery.collectAsStateWithLifecycle()
     val exploreState by viewModel.exploreState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val tabs = listOf("es" to "Español", "en" to "Inglés", "all" to "Multilenguaje")
 
@@ -166,7 +171,17 @@ fun SourceScreen(
                 ) { extension ->
                     ExtensionStoreCard(
                         extension = extension,
-                        onInstall = { viewModel.activate(extension) },
+                        onInstall = {
+                            viewModel.activate(extension)
+                            if (extension.apkUrl.isNotBlank()) {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(extension.apkUrl)))
+                            }
+                        },
+                        onOpen = {
+                            if (extension.baseUrl.isNotBlank()) {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(extension.baseUrl)))
+                            }
+                        },
                         onDelete = { viewModel.remove(extension) }
                     )
                 }
@@ -229,6 +244,7 @@ private fun StoreSearchHeader(
 private fun ExtensionStoreCard(
     extension: Extension,
     onInstall: () -> Unit,
+    onOpen: () -> Unit,
     onDelete: () -> Unit
 ) {
     val action = when {
@@ -272,6 +288,8 @@ private fun ExtensionStoreCard(
                         modifier = Modifier.weight(1f, fill = false)
                     )
                     LangBadge(extension.lang)
+                    if (extension.isMetaProvider) TypeBadge("META", Accent)
+                    if (extension.isDirectory) TypeBadge("DIR", Color(0xFFB4F56C))
                 }
                 Text(
                     text = extension.pkgName,
@@ -281,7 +299,11 @@ private fun ExtensionStoreCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Instalada ${extension.installedVersion ?: "-"}  |  Disponible ${extension.version}",
+                    text = when {
+                        extension.isMetaProvider -> "Proveedor de metadatos y catalogo inicial"
+                        extension.isDirectory -> "Directorio EverythingMoe para descubrir fuentes"
+                        else -> "Instalada ${extension.installedVersion ?: "-"}  |  Disponible ${extension.version}"
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFFB7B7B7),
                     maxLines = 1,
@@ -292,13 +314,17 @@ private fun ExtensionStoreCard(
             AnimatedContent(targetState = action, label = "extension-action") { current ->
                 when (current) {
                     ExtensionAction.Install -> OutlinedButton(
-                        onClick = onInstall,
+                        onClick = if (extension.isDirectory) onOpen else onInstall,
                         shape = RoundedCornerShape(16.dp),
                         border = BorderStroke(1.dp, Accent)
                     ) {
-                        Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(
+                            if (extension.isDirectory) Icons.Rounded.Public else Icons.Rounded.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
                         Spacer(Modifier.size(6.dp))
-                        Text("Instalar")
+                        Text(if (extension.isDirectory) "Abrir" else "Instalar")
                     }
 
                     ExtensionAction.Update -> Button(
@@ -341,6 +367,23 @@ private fun LangBadge(lang: String) {
             color = color,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+        )
+    }
+}
+
+@Composable
+private fun TypeBadge(text: String, color: Color) {
+    Surface(
+        modifier = Modifier.padding(start = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = color.copy(alpha = 0.12f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.35f))
+    ) {
+        Text(
+            text = text,
+            color = color,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
         )
     }
 }

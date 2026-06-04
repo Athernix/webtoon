@@ -10,6 +10,6 @@ interface AniListApiService {
     suspend fun postQuery(@Body request: AniListRequest): AniListResponse
 
     companion object {
-        const val BASE_URL = "https://graphql.anilist.co"
+        const val BASE_URL = "https://graphql.anilist.co/"
     }
 }

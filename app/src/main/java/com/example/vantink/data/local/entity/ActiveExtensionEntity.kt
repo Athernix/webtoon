@@ -11,5 +11,8 @@ data class ActiveExtensionEntity(
     val lang: String,
     val version: String,
     val iconUrl: String = "",
+    val sourceType: String = "madara",
+    val isMetaProvider: Boolean = false,
+    val isDirectory: Boolean = false,
     val installedAt: Long = System.currentTimeMillis()
 )

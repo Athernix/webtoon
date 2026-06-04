@@ -10,7 +10,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.vantink.data.local.entity.DownloadEntity
 import com.example.vantink.domain.model.ChapterSummary
@@ -32,9 +32,9 @@ fun DetailsScreen(
     onWebClick: (String, String) -> Unit,
     onBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val isFavorite by viewModel.isFavorite.collectAsState()
-    val downloads by viewModel.downloads.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
+    val downloads by viewModel.downloads.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

@@ -11,13 +11,13 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.vantink.presentation.components.WebtoonCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +28,7 @@ fun HomeScreen(
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val gridState = rememberLazyGridState()
 
@@ -83,23 +83,35 @@ fun HomeScreen(
                     }
                 }
                 is HomeUiState.Success -> {
-                    LazyVerticalGrid(
-                        state = gridState,
-                        columns = GridCells.Adaptive(140.dp),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(state.webtoons, key = { it.id }) { webtoon ->
-                            WebtoonCard(
-                                webtoon = webtoon,
-                                onClick = { onWebtoonClick(webtoon.id) }
-                            )
+                    if (state.webtoons.isEmpty()) {
+                        Column(
+                            modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("No hay resultados de las fuentes activas.")
+                            Button(onClick = { viewModel.loadWebtoons() }, modifier = Modifier.padding(top = 12.dp)) {
+                                Text("Reintentar")
+                            }
                         }
-                        
-                        if (state.hasMore) {
-                            item {
-                                CircularProgressIndicator(modifier = Modifier.padding(16.dp).align(Alignment.Center))
+                    } else {
+                        LazyVerticalGrid(
+                            state = gridState,
+                            columns = GridCells.Adaptive(140.dp),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(state.webtoons, key = { it.id }) { webtoon ->
+                                WebtoonCard(
+                                    webtoon = webtoon,
+                                    onClick = { onWebtoonClick(webtoon.id) }
+                                )
+                            }
+
+                            if (state.hasMore) {
+                                item {
+                                    CircularProgressIndicator(modifier = Modifier.padding(16.dp).align(Alignment.Center))
+                                }
                             }
                         }
                     }

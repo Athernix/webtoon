@@ -9,8 +9,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,7 +23,7 @@ fun DownloadScreen(
     onChapterClick: (String, String) -> Unit,
     onBack: () -> Unit
 ) {
-    val downloads by viewModel.downloads.collectAsState()
+    val downloads by viewModel.downloads.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

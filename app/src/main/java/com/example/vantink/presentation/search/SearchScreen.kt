@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.vantink.domain.model.SearchFilter
 import com.example.vantink.presentation.components.WebtoonCard
 
@@ -26,8 +27,8 @@ fun SearchScreen(
     onWebtoonClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val filter by viewModel.filter.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val filter by viewModel.filter.collectAsStateWithLifecycle()
     var showFilters by remember { mutableStateOf(false) }
     val gridState = rememberLazyGridState()
 
