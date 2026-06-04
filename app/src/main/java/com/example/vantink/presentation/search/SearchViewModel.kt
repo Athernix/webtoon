@@ -34,14 +34,12 @@ class SearchViewModel(
 
     fun onQueryChange(newQuery: String) {
         _filter.value = _filter.value.copy(query = newQuery, page = 1)
-        currentResults.clear()
-        triggerSearch()
+        triggerSearch(isLoadMore = false)
     }
 
     fun onFilterChange(newFilter: SearchFilter) {
         _filter.value = newFilter.copy(page = 1)
-        currentResults.clear()
-        triggerSearch()
+        triggerSearch(isLoadMore = false)
     }
 
     fun loadNextPage() {
@@ -52,28 +50,38 @@ class SearchViewModel(
         }
     }
 
-    private fun triggerSearch(isLoadMore: Boolean = false) {
+    private fun triggerSearch(isLoadMore: Boolean) {
         searchJob?.cancel()
         val currentFilter = _filter.value
         
-        if (currentFilter.query.isBlank() && currentFilter.genres.isEmpty() && currentFilter.status == null && currentFilter.tags.isEmpty()) {
-            _uiState.value = SearchUiState.Idle
-            return
+        // Reset results if not loading more
+        if (!isLoadMore) {
+            currentResults.clear()
+            // Immediately show loading to give feedback that filters/query changed
+            if (currentFilter.query.isNotBlank() || currentFilter.genres.isNotEmpty() || currentFilter.status != null || currentFilter.tags.isNotEmpty()) {
+                _uiState.value = SearchUiState.Loading
+            } else {
+                _uiState.value = SearchUiState.Idle
+                return
+            }
         }
 
         searchJob = viewModelScope.launch {
-            if (!isLoadMore) {
-                delay(500) // Debounce
-                _uiState.value = SearchUiState.Loading
-            }
+            if (!isLoadMore) delay(400) // Debounce for typing
             
             repository.searchWebtoons(currentFilter)
                 .onSuccess { results ->
                     if (!isLoadMore) currentResults.clear()
-                    currentResults.addAll(results)
+                    
+                    // Filter duplicates which can happen across sources
+                    val newUniqueResults = results.filter { newItem -> 
+                        currentResults.none { it.id == newItem.id }
+                    }
+                    currentResults.addAll(newUniqueResults)
+                    
                     _uiState.value = SearchUiState.Success(
                         results = currentResults.toList(),
-                        hasMore = results.size >= currentFilter.perPage
+                        hasMore = results.isNotEmpty() && results.size >= currentFilter.perPage
                     )
                 }
                 .onFailure { error ->

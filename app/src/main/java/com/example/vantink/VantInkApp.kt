@@ -6,6 +6,7 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.example.vantink.di.ServiceLocator
+import com.example.vantink.domain.repository.ExtensionRepository
 import com.example.vantink.domain.repository.WebtoonRepository
 import okhttp3.OkHttpClient
 
@@ -13,6 +14,9 @@ class VantInkApp : Application(), ImageLoaderFactory {
 
     val repository: WebtoonRepository
         get() = ServiceLocator.getRepository(this)
+
+    val extensionRepository: ExtensionRepository
+        get() = ServiceLocator.getExtensionRepository(this)
     
     val okHttpClient: OkHttpClient
         get() = ServiceLocator.getOkHttpClient()

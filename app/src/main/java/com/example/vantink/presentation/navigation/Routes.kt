@@ -29,6 +29,9 @@ sealed interface Route : NavKey {
     data object Downloads : Route
 
     @Serializable
+    data class Web(val url: String, val title: String) : Route
+
+    @Serializable
     data class Details(val webtoonId: String) : Route
 
     @Serializable

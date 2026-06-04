@@ -18,6 +18,7 @@ import com.example.vantink.data.local.AppPreferences
 @Composable
 fun SettingsScreen(
     onSourcesClick: () -> Unit,
+    onDirectoryClick: () -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -53,6 +54,13 @@ fun SettingsScreen(
                 supportingContent = { Text("Manage installed scrapers and repositories") },
                 trailingContent = { Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onSourcesClick)
+            )
+
+            ListItem(
+                headlineContent = { Text("EverythingMoe Directory") },
+                supportingContent = { Text("Browse curated catalogs and websites") },
+                trailingContent = { Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onDirectoryClick)
             )
 
             Spacer(modifier = Modifier.height(16.dp))

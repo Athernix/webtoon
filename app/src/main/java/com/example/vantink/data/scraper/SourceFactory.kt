@@ -11,6 +11,7 @@ class SourceFactory(
     fun create(entity: SourceEntity): Source {
         return when (entity.type) {
             "madara" -> MadaraSource(entity.name, entity.baseUrl)
+            "mangastream" -> MangaStreamSource(entity.name, entity.baseUrl)
             "anilist_md" -> AniListMangaDexSource(aniListApi, mangaDexApi)
             else -> AniListMangaDexSource(aniListApi, mangaDexApi) // Default
         }

@@ -36,9 +36,12 @@ import com.example.vantink.presentation.reader.ReaderScreen
 import com.example.vantink.presentation.reader.ReaderViewModel
 import com.example.vantink.presentation.search.SearchScreen
 import com.example.vantink.presentation.search.SearchViewModel
+import com.example.vantink.presentation.settings.DirectoryScreen
+import com.example.vantink.presentation.settings.DirectoryViewModel
 import com.example.vantink.presentation.settings.SettingsScreen
 import com.example.vantink.presentation.settings.SourceScreen
 import com.example.vantink.presentation.settings.SourceViewModel
+import com.example.vantink.presentation.settings.WebScreen
 import com.example.vantink.ui.theme.VantInkTheme
 
 class MainActivity : ComponentActivity() {
@@ -63,6 +66,7 @@ fun VantInkAppNavigation() {
     val navigator = remember { Navigator(navigationState) }
     val app = (LocalContext.current.applicationContext as VantInkApp)
     val repository = app.repository
+    val extensionRepository = app.extensionRepository
     val client = app.okHttpClient
 
     val windowAdaptiveInfo = currentWindowAdaptiveInfo()
@@ -158,6 +162,10 @@ fun VantInkAppNavigation() {
                 onChapterClick = { webtoonId, chapterId ->
                     navigator.navigate(Route.Reader(webtoonId, chapterId))
                 },
+                onWebClick = { url, title ->
+                    val finalUrl = if (url.startsWith("http")) url else "https://anilist.co/manga/$url"
+                    navigator.navigate(Route.Web(finalUrl, title))
+                },
                 onBack = { navigator.goBack() }
             )
         }
@@ -173,15 +181,32 @@ fun VantInkAppNavigation() {
         entry<Route.Settings> {
             SettingsScreen(
                 onSourcesClick = { navigator.navigate(Route.Sources) },
+                onDirectoryClick = { navigator.navigate(Route.Directory) },
                 onBack = { navigator.goBack() }
             )
         }
         entry<Route.Sources> {
             val viewModel: SourceViewModel = viewModel {
-                SourceViewModel(repository, client)
+                SourceViewModel(extensionRepository)
             }
             SourceScreen(
                 viewModel = viewModel,
+                onBack = { navigator.goBack() }
+            )
+        }
+        entry<Route.Directory> {
+            val viewModel: DirectoryViewModel = viewModel {
+                DirectoryViewModel(repository, client)
+            }
+            DirectoryScreen(
+                viewModel = viewModel,
+                onBack = { navigator.goBack() }
+            )
+        }
+        entry<Route.Web> { key ->
+            WebScreen(
+                url = key.url,
+                title = key.title,
                 onBack = { navigator.goBack() }
             )
         }

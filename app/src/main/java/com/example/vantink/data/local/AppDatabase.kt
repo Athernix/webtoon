@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.vantink.data.local.dao.ActiveExtensionDao
 import com.example.vantink.data.local.dao.WebtoonDao
+import com.example.vantink.data.local.entity.ActiveExtensionEntity
 import com.example.vantink.data.local.entity.FavoriteEntity
 import com.example.vantink.data.local.entity.HistoryEntity
 
@@ -14,9 +16,10 @@ import com.example.vantink.data.local.entity.HistoryEntity
         HistoryEntity::class, 
         com.example.vantink.data.local.entity.DownloadEntity::class, 
         com.example.vantink.data.local.entity.SourceEntity::class,
-        com.example.vantink.data.local.entity.RepositoryEntity::class
+        com.example.vantink.data.local.entity.RepositoryEntity::class,
+        ActiveExtensionEntity::class
     ],
-    version = 5, // Increased version to clear corrupt state
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val downloadDao: com.example.vantink.data.local.dao.DownloadDao
     abstract val sourceDao: com.example.vantink.data.local.dao.SourceDao
     abstract val repositoryDao: com.example.vantink.data.local.dao.RepositoryDao
+    abstract val activeExtensionDao: ActiveExtensionDao
 
     companion object {
         const val DATABASE_NAME = "vantink_db"

@@ -29,6 +29,7 @@ import com.example.vantink.domain.model.Webtoon
 fun DetailsScreen(
     viewModel: DetailsViewModel,
     onChapterClick: (String, String) -> Unit,
+    onWebClick: (String, String) -> Unit,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,6 +53,14 @@ fun DetailsScreen(
                 actions = {
                     if (uiState is DetailsUiState.Success) {
                         val webtoon = (uiState as DetailsUiState.Success).webtoon
+                        IconButton(
+                            onClick = { onWebClick(webtoon.id, webtoon.title) },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Icon(Icons.Rounded.Public, contentDescription = "Web")
+                        }
                         IconButton(
                             onClick = { viewModel.toggleFavorite(webtoon) },
                             colors = IconButtonDefaults.iconButtonColors(
@@ -79,11 +88,20 @@ fun DetailsScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is DetailsUiState.Error -> {
-                    Text(
-                        state.message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                        Text(
+                            "Tip: Try opening the Web view to bypass protection.",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Button(onClick = { viewModel.loadDetails() }, modifier = Modifier.padding(top = 16.dp)) {
+                            Text("Retry")
+                        }
+                    }
                 }
                 is DetailsUiState.Success -> {
                     DetailsContent(

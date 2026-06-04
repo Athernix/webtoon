@@ -2,11 +2,14 @@ package com.example.vantink.di
 
 import android.content.Context
 import com.example.vantink.data.local.AppDatabase
+import com.example.vantink.data.remote.KeiyoushiApiService
 import com.example.vantink.data.remote.MangaDexApiService
 import com.example.vantink.data.remote.metadata.AniListApiService
+import com.example.vantink.data.repository.ExtensionRepositoryImpl
 import com.example.vantink.data.repository.WebtoonRepositoryImpl
 import com.example.vantink.data.scraper.AniListMangaDexSource
 import com.example.vantink.data.scraper.SourceFactory
+import com.example.vantink.domain.repository.ExtensionRepository
 import com.example.vantink.domain.repository.WebtoonRepository
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -25,6 +28,9 @@ object ServiceLocator {
     
     @Volatile
     private var repository: WebtoonRepository? = null
+
+    @Volatile
+    private var extensionRepository: ExtensionRepository? = null
 
     private val client: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor().apply {
@@ -70,6 +76,22 @@ object ServiceLocator {
                 db.repositoryDao
             )
             repository = instance
+            instance
+        }
+    }
+
+    fun getExtensionRepository(context: Context): ExtensionRepository {
+        return extensionRepository ?: synchronized(this) {
+            val db = getDatabase(context)
+            val api = Retrofit.Builder()
+                .baseUrl(KeiyoushiApiService.BASE_URL)
+                .client(client)
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
+                .create(KeiyoushiApiService::class.java)
+
+            val instance = ExtensionRepositoryImpl(api, db.activeExtensionDao)
+            extensionRepository = instance
             instance
         }
     }

@@ -37,16 +37,31 @@ class AniListMangaDexSource(
     override suspend fun searchWebtoons(filter: com.example.vantink.domain.model.SearchFilter): List<Webtoon> = withContext(Dispatchers.IO) {
         try {
             val variables = mutableMapOf<String, Any?>()
+            
+            // AniList variables handling
             if (filter.query.isNotBlank()) variables["search"] = filter.query
+            
+            // AniList expects exactly the enum strings
             if (filter.genres.isNotEmpty()) variables["genres"] = filter.genres
             if (filter.tags.isNotEmpty()) variables["tags"] = filter.tags
             if (filter.status != null) variables["status"] = filter.status
             if (filter.format != null) variables["format"] = filter.format
+            
+            // Sort must be a list
             variables["sort"] = listOf(filter.sort)
             variables["page"] = filter.page
             variables["perPage"] = filter.perPage
             
             val response = aniListApi.postQuery(AniListRequest(aniListQuery, variables))
+            
+            if (response.errors != null) {
+                // If search has errors (common when mixing tags and search on AniList)
+                // Try a fallback search with just the query
+                if (filter.query.isNotBlank() && (filter.genres.isNotEmpty() || filter.tags.isNotEmpty())) {
+                     return@withContext searchWebtoons(filter.copy(genres = emptyList(), tags = emptyList()))
+                }
+            }
+
             response.data?.page?.media?.map { media ->
                 Webtoon(
                     id = media.id.toString(),

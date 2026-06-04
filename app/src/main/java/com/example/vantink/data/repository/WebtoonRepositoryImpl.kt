@@ -14,6 +14,7 @@ import com.example.vantink.data.mapper.toFavoriteEntity
 import com.example.vantink.data.mapper.toWebtoon
 import com.example.vantink.data.scraper.DownloadWorker
 import com.example.vantink.data.scraper.MadaraSource
+import com.example.vantink.data.scraper.MangaStreamSource
 import com.example.vantink.data.scraper.Source
 import com.example.vantink.data.scraper.SourceFactory
 import com.example.vantink.domain.model.Chapter
@@ -70,8 +71,8 @@ class WebtoonRepositoryImpl(
         return try {
             if (id.contains("|")) {
                 val (sourceId, realId) = id.split("|", limit = 2)
-                // sourceId is the baseUrl for Madara sources
-                val source = MadaraSource("", sourceId)
+                // Try to resolve source type from ID
+                val source = if (id.contains("mangastream")) MangaStreamSource("", sourceId) else MadaraSource("", sourceId)
                 val webtoon = source.getWebtoonDetails(realId)
                 Result.success(webtoon.copy(id = id))
             } else {
