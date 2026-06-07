@@ -19,7 +19,7 @@ import com.example.vantink.data.local.entity.HistoryEntity
         com.example.vantink.data.local.entity.RepositoryEntity::class,
         ActiveExtensionEntity::class
     ],
-    version = 8,
+    version = 12, // Bumped to 12 to resolve "Room cannot verify the data integrity" error
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

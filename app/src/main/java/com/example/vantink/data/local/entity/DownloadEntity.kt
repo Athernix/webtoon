@@ -12,5 +12,7 @@ data class DownloadEntity(
     val chapterNumber: Float,
     val status: String, // PENDING, DOWNLOADING, COMPLETED, ERROR
     val progress: Int = 0,
-    val localPath: String = ""
+    val localPath: String = "",
+    val errorMessage: String? = null,
+    val createdDate: Long = System.currentTimeMillis()
 )

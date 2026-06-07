@@ -12,5 +12,8 @@ data class HistoryEntity(
     val chapterTitle: String,
     val chapterNumber: Float,
     val scrollPosition: Int = 0,
+    val contentType: String = "UNKNOWN", // ContentType enum name
+    val readingMode: String = "TOP_TO_BOTTOM", // ReadingMode enum name
+    val language: String = "en",
     val lastReadDate: Long = System.currentTimeMillis()
 )

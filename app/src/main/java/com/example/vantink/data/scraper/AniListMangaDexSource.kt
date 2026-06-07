@@ -1,9 +1,12 @@
 package com.example.vantink.data.scraper
 
+import android.util.Log
 import com.example.vantink.data.remote.MangaDexApiService
 import com.example.vantink.data.remote.metadata.AniListApiService
 import com.example.vantink.data.remote.metadata.dto.AniListRequest
 import com.example.vantink.domain.model.ChapterSummary
+import com.example.vantink.domain.model.ContentType
+import com.example.vantink.domain.model.ReadingMode
 import com.example.vantink.domain.model.Webtoon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -15,6 +18,8 @@ class AniListMangaDexSource(
 ) : Source {
     override val name: String = "AniList + MangaDex"
     override val baseUrl: String = "https://anilist.co"
+
+    private val TAG = "AniListMangaDexSource"
 
     private val aniListQuery = """
         query (${'$'}search: String, ${'$'}genres: [String], ${'$'}tags: [String], ${'$'}status: MediaStatus, ${'$'}format: MediaFormat, ${'$'}id: Int, ${'$'}sort: [MediaSort], ${'$'}page: Int, ${'$'}perPage: Int) {
@@ -37,52 +42,56 @@ class AniListMangaDexSource(
     override suspend fun searchWebtoons(filter: com.example.vantink.domain.model.SearchFilter): List<Webtoon> = withContext(Dispatchers.IO) {
         try {
             val variables = mutableMapOf<String, Any?>()
-            
-            // AniList variables handling
+
             if (filter.query.isNotBlank()) variables["search"] = filter.query
-            
-            // AniList expects exactly the enum strings
             if (filter.genres.isNotEmpty()) variables["genres"] = filter.genres
             if (filter.tags.isNotEmpty()) variables["tags"] = filter.tags
             if (filter.status != null) variables["status"] = filter.status
             if (filter.format != null) variables["format"] = filter.format
-            
-            // Sort must be a list
+
             variables["sort"] = listOf(filter.sort)
             variables["page"] = filter.page
             variables["perPage"] = filter.perPage
-            
+
             val response = aniListApi.postQuery(AniListRequest(aniListQuery, variables))
-            
-            if (response.errors != null) {
-                // If search has errors (common when mixing tags and search on AniList)
-                // Try a fallback search with just the query
+
+            if (response.errors != null && response.data?.page == null) {
                 if (filter.query.isNotBlank() && (filter.genres.isNotEmpty() || filter.tags.isNotEmpty())) {
                      return@withContext searchWebtoons(filter.copy(genres = emptyList(), tags = emptyList()))
                 }
+                return@withContext emptyList<Webtoon>()
             }
 
             response.data?.page?.media?.map { media ->
+                val contentType = detectContentType(media.format)
                 Webtoon(
                     id = media.id.toString(),
                     title = media.title.english ?: media.title.romaji ?: media.title.native ?: "Unknown",
                     description = media.description ?: "",
                     thumbnailUrl = media.coverImage.extraLarge ?: media.coverImage.large,
                     status = media.status ?: "Unknown",
-                    genres = media.genres ?: emptyList()
+                    genres = media.genres ?: emptyList(),
+                    contentType = contentType,
+                    readingMode = contentType.readingMode,
+                    language = detectLanguageFromFormat(media.format)
                 )
             } ?: emptyList()
         } catch (e: Exception) {
+            Log.e(TAG, "Error searching webtoons", e)
             emptyList()
         }
     }
 
+
     override suspend fun getWebtoonDetails(id: String): Webtoon = withContext(Dispatchers.IO) {
         try {
-            val aniId = id.toIntOrNull() ?: return@withContext Webtoon(id = id, title = "Invalid ID")
+            val aniId = id.toIntOrNull() ?: return@withContext Webtoon(id = id, title = "Error: Invalid ID")
             val aniResponse = aniListApi.postQuery(AniListRequest(aniListQuery, mapOf("id" to aniId, "page" to 1, "perPage" to 1)))
-            val media = aniResponse.data?.page?.media?.firstOrNull() ?: throw Exception("Not found")
+            val media = aniResponse.data?.page?.media?.firstOrNull() ?: throw Exception("Media not found in AniList")
             
+            val contentType = detectContentType(media.format)
+            val language = detectLanguageFromFormat(media.format)
+
             val titlesToTry = listOfNotNull(
                 media.title.english,
                 media.title.romaji,
@@ -98,37 +107,50 @@ class AniListMangaDexSource(
             var mangaId = ""
             val originalLang = when (media.format) {
                 "MANHWA" -> listOf("ko")
-                "MANHUA" -> listOf("zh", "zh-hk")
+                "MANHUA" -> listOf("zh", "zh-hk", "zh-cn")
                 else -> null
             }
-            
+
             for (title in titlesToTry) {
                 try {
                     val mdSearch = mangaDexApi.searchManga(title, languages = originalLang)
                     mangaId = mdSearch.data.firstOrNull()?.id ?: ""
                     if (mangaId.isNotEmpty()) break
                 } catch (e: Exception) {
+                    Log.w(TAG, "Error searching title: $title", e)
                     delay(500)
                 }
             }
-            
+
             val chapters = if (mangaId.isNotEmpty()) {
                 val preferredLang = com.example.vantink.data.local.AppPreferences.preferredLanguage.value
                 val allChapters = mutableListOf<com.example.vantink.data.remote.dto.MangaDexChapter>()
                 var offset = 0
                 val limit = 500
-                
-                do {
-                    val feed = mangaDexApi.getMangaFeed(
-                        id = mangaId,
-                        languages = listOf(preferredLang),
-                        order = "asc",
-                        limit = limit,
-                        offset = offset
-                    )
-                    allChapters.addAll(feed.data)
-                    offset += limit
-                } while (offset < feed.total && feed.data.isNotEmpty())
+
+                try {
+                    do {
+                        val feed = mangaDexApi.getMangaFeed(
+                            id = mangaId,
+                            languages = listOf(preferredLang),
+                            order = "asc",
+                            limit = limit,
+                            offset = offset
+                        )
+                        allChapters.addAll(feed.data)
+                        offset += limit
+                    } while (offset < feed.total && feed.data.isNotEmpty())
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error fetching feed in preferred language, falling back to English", e)
+                    if (preferredLang != "en") {
+                        try {
+                            val enFeed = mangaDexApi.getMangaFeed(mangaId, listOf("en"), "asc", limit, 0)
+                            allChapters.addAll(enFeed.data)
+                        } catch (e2: Exception) {
+                            Log.e(TAG, "Error fetching English feed", e2)
+                        }
+                    }
+                }
 
                 allChapters.map { chapter ->
                     ChapterSummary(
@@ -137,8 +159,11 @@ class AniListMangaDexSource(
                         number = chapter.attributes.chapter?.toFloatOrNull() ?: 0f,
                         uploadDate = ""
                     )
-                }
-            } else emptyList()
+                }.sortedByDescending { it.number }
+            } else {
+                Log.w(TAG, "No manga found for ID: $id")
+                emptyList()
+            }
 
             Webtoon(
                 id = id,
@@ -147,10 +172,14 @@ class AniListMangaDexSource(
                 thumbnailUrl = media.coverImage.extraLarge ?: media.coverImage.large,
                 status = media.status ?: "Unknown",
                 genres = media.genres ?: emptyList(),
-                chapters = chapters
+                chapters = chapters,
+                contentType = contentType,
+                readingMode = contentType.readingMode,
+                language = language
             )
         } catch (e: Exception) {
-            Webtoon(id = id, title = "Error loading details")
+            Log.e(TAG, "Error getting webtoon details for ID: $id", e)
+            Webtoon(id = id, title = "Error: ${e.localizedMessage?.take(40)}")
         }
     }
 
@@ -163,7 +192,28 @@ class AniListMangaDexSource(
                 "$baseUrl/data/$hash/$filename"
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error getting chapter pages for: $chapterId", e)
             emptyList()
         }
     }
+
+    private fun detectContentType(format: String?): ContentType {
+        return when (format?.uppercase()) {
+            "MANHWA" -> ContentType.MANWHA
+            "MANHUA" -> ContentType.MANHUA
+            "MANGA" -> ContentType.MANGA
+            "ONE_SHOT" -> ContentType.MANGA
+            else -> ContentType.UNKNOWN
+        }
+    }
+
+    private fun detectLanguageFromFormat(format: String?): String {
+        return when (format?.uppercase()) {
+            "MANHWA" -> "ko"
+            "MANHUA" -> "zh-cn"
+            "MANGA" -> "ja"
+            else -> "en"
+        }
+    }
 }
+

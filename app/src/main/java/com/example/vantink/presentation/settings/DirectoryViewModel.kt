@@ -41,6 +41,12 @@ class DirectoryViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                val featured = listOf(
+                    DirectoryItem("InManga", "InManga", "https://inmanga.com", "https://inmanga.com/images/favicon.png", "inmanga"),
+                    DirectoryItem("TMOtaku", "TMOtaku", "https://tmotaku.com", "https://tmotaku.com/wp-content/uploads/2021/01/logo.png", "madara"),
+                    DirectoryItem("TMOManhwa", "TMOManhwa", "https://tmomanhwa.com", "https://tmomanhwa.com/wp-content/uploads/2021/01/logo.png", "madara")
+                )
+
                 val results = withContext(Dispatchers.IO) {
                     val request = Request.Builder().url("https://everythingmoe.com/data/master/prod/manga.json").build()
                     client.newCall(request).execute().use { response ->
@@ -61,7 +67,7 @@ class DirectoryViewModel(
                         list
                     }
                 }
-                _items.value = results
+                _items.value = featured + results
             } catch (e: Exception) {
                 // Handle error
             } finally {
@@ -71,17 +77,15 @@ class DirectoryViewModel(
     }
 
     fun addAsSource(item: DirectoryItem) {
+        val link = if (item.link.startsWith("http")) item.link else "https://${item.link}"
         viewModelScope.launch {
-            // We assume it's Madara if we add it from directory, 
-            // though we might need a way to verify or let user choose.
-            // For now, let's just add it as a potential source.
             repository.addSource(SourceEntity(
-                id = item.link,
+                id = link,
                 name = item.name,
-                baseUrl = item.link,
-                type = "madara", // Default assumption for manga sites
+                baseUrl = link,
+                type = item.type,
                 iconUrl = item.icon,
-                lang = "en"
+                lang = "es" // These are mostly Spanish sites
             ))
         }
     }

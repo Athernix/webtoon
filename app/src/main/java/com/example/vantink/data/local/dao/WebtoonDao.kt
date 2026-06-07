@@ -12,6 +12,9 @@ interface WebtoonDao {
     @Query("SELECT * FROM favorites ORDER BY addedDate DESC")
     fun getFavorites(): Flow<List<FavoriteEntity>>
 
+    @Query("SELECT * FROM favorites WHERE contentType = :contentType ORDER BY addedDate DESC")
+    fun getFavoritesByContentType(contentType: String): Flow<List<FavoriteEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(favorite: FavoriteEntity)
 
@@ -21,9 +24,15 @@ interface WebtoonDao {
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE id = :webtoonId)")
     fun isFavorite(webtoonId: String): Flow<Boolean>
 
+    @Query("SELECT * FROM favorites WHERE id = :webtoonId")
+    suspend fun getFavoriteById(webtoonId: String): FavoriteEntity?
+
     // History
     @Query("SELECT * FROM history ORDER BY lastReadDate DESC")
     fun getHistory(): Flow<List<HistoryEntity>>
+
+    @Query("SELECT * FROM history WHERE contentType = :contentType ORDER BY lastReadDate DESC")
+    fun getHistoryByContentType(contentType: String): Flow<List<HistoryEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHistory(history: HistoryEntity)
@@ -36,4 +45,10 @@ interface WebtoonDao {
 
     @Query("DELETE FROM history")
     suspend fun clearHistory()
+
+    @Query("UPDATE history SET scrollPosition = :scrollPosition, lastReadDate = :lastReadDate WHERE webtoonId = :webtoonId")
+    suspend fun updateScrollPosition(webtoonId: String, scrollPosition: Int, lastReadDate: Long = System.currentTimeMillis())
+
+    @Query("SELECT chapterId FROM history WHERE webtoonId = :webtoonId LIMIT 1")
+    suspend fun getLastChapterId(webtoonId: String): String?
 }

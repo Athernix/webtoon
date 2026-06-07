@@ -33,7 +33,7 @@ object ServiceLocator {
 
     private val client: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.NONE // Reduce logs for performance
+            level = HttpLoggingInterceptor.Level.NONE
         }
         OkHttpClient.Builder()
             .addInterceptor(logging)
@@ -63,7 +63,7 @@ object ServiceLocator {
             val mangaDexApi = retrofit.baseUrl(MangaDexApiService.BASE_URL).build().create(MangaDexApiService::class.java)
 
             val primarySource = AniListMangaDexSource(aniListApi, mangaDexApi)
-            val sourceFactory = SourceFactory(aniListApi, mangaDexApi)
+            val sourceFactory = SourceFactory(aniListApi, mangaDexApi, client)
 
             val instance = WebtoonRepositoryImpl(
                 context.applicationContext,
@@ -83,12 +83,21 @@ object ServiceLocator {
     fun getExtensionRepository(context: Context): ExtensionRepository {
         return extensionRepository ?: synchronized(this) {
             val db = getDatabase(context)
-            val retrofit = Retrofit.Builder()
+            val aniListApi = Retrofit.Builder()
+                .baseUrl(AniListApiService.BASE_URL)
                 .client(client)
                 .addConverterFactory(MoshiConverterFactory.create())
-            val aniListApi = retrofit.baseUrl(AniListApiService.BASE_URL).build().create(AniListApiService::class.java)
-            val mangaDexApi = retrofit.baseUrl(MangaDexApiService.BASE_URL).build().create(MangaDexApiService::class.java)
-            val sourceFactory = SourceFactory(aniListApi, mangaDexApi)
+                .build()
+                .create(AniListApiService::class.java)
+            
+            val mangaDexApi = Retrofit.Builder()
+                .baseUrl(MangaDexApiService.BASE_URL)
+                .client(client)
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
+                .create(MangaDexApiService::class.java)
+
+            val sourceFactory = SourceFactory(aniListApi, mangaDexApi, client)
 
             val instance = ExtensionRepositoryImpl(client, sourceFactory, db.activeExtensionDao)
             extensionRepository = instance

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -36,12 +37,7 @@ import com.example.vantink.presentation.reader.ReaderScreen
 import com.example.vantink.presentation.reader.ReaderViewModel
 import com.example.vantink.presentation.search.SearchScreen
 import com.example.vantink.presentation.search.SearchViewModel
-import com.example.vantink.presentation.settings.DirectoryScreen
-import com.example.vantink.presentation.settings.DirectoryViewModel
-import com.example.vantink.presentation.settings.SettingsScreen
-import com.example.vantink.presentation.settings.SourceScreen
-import com.example.vantink.presentation.settings.SourceViewModel
-import com.example.vantink.presentation.settings.WebScreen
+import com.example.vantink.presentation.settings.*
 import com.example.vantink.ui.theme.VantInkTheme
 
 class MainActivity : ComponentActivity() {
@@ -60,8 +56,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun VantInkAppNavigation() {
     val navigationState = rememberNavigationState(
-        startRoute = Route.Home,
-        topLevelRoutes = setOf(Route.Home, Route.Search, Route.Favorites, Route.History, Route.Downloads)
+        startRoute = Route.Library,
+        topLevelRoutes = setOf(Route.Library, Route.Updates, Route.History, Route.Browse, Route.More)
     )
     val navigator = remember { Navigator(navigationState) }
     val app = (LocalContext.current.applicationContext as VantInkApp)
@@ -77,172 +73,121 @@ fun VantInkAppNavigation() {
     val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
 
     val entryProvider = entryProvider<NavKey> {
-        entry<Route.Home>(
-            metadata = ListDetailSceneStrategy.listPane(
-                detailPlaceholder = { com.example.vantink.presentation.components.PlaceholderScreen("Select a webtoon to view details") }
+        entry<Route.Library>(metadata = ListDetailSceneStrategy.listPane()) {
+            FavoritesScreen(
+                viewModel = viewModel { FavoritesViewModel(repository) },
+                onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) }
             )
-        ) {
-            val viewModel: HomeViewModel = viewModel {
-                HomeViewModel(repository)
-            }
+        }
+        
+        entry<Route.Updates>(metadata = ListDetailSceneStrategy.listPane()) {
+            PlaceholderScreen("New chapter updates will appear here")
+        }
+
+        entry<Route.History>(metadata = ListDetailSceneStrategy.listPane()) {
+            HistoryScreen(
+                viewModel = viewModel { HistoryViewModel(repository) },
+                onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
+                onChapterClick = { webtoonId, chapterId -> navigator.navigate(Route.Reader(webtoonId, chapterId)) }
+            )
+        }
+
+        entry<Route.Browse>(metadata = ListDetailSceneStrategy.listPane()) {
+            val viewModel: HomeViewModel = viewModel { HomeViewModel(repository) }
             HomeScreen(
                 viewModel = viewModel,
                 onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
                 onSearchClick = { navigator.navigate(Route.Search) },
-                onSettingsClick = { navigator.navigate(Route.Settings) }
+                onSettingsClick = { navigator.navigate(Route.Extensions) }
             )
         }
-        entry<Route.Search>(
-            metadata = ListDetailSceneStrategy.listPane(
-                detailPlaceholder = { com.example.vantink.presentation.components.PlaceholderScreen("Select a webtoon to view details") }
+
+        entry<Route.More>(metadata = ListDetailSceneStrategy.listPane()) {
+            SettingsScreen(
+                onSourcesClick = { navigator.navigate(Route.Extensions) },
+                onDirectoryClick = { navigator.navigate(Route.Directory) },
+                onBack = { navigator.goBack() }
             )
-        ) {
-            val viewModel: SearchViewModel = viewModel {
-                SearchViewModel(repository)
-            }
+        }
+
+        entry<Route.Search> {
             SearchScreen(
-                viewModel = viewModel,
+                viewModel = viewModel { SearchViewModel(repository) },
                 onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
                 onBack = { navigator.goBack() }
             )
         }
-        entry<Route.Favorites>(
-            metadata = ListDetailSceneStrategy.listPane(
-                detailPlaceholder = { com.example.vantink.presentation.components.PlaceholderScreen("Select a webtoon to view details") }
-            )
-        ) {
-            val viewModel: FavoritesViewModel = viewModel {
-                FavoritesViewModel(repository)
-            }
-            FavoritesScreen(
-                viewModel = viewModel,
-                onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) }
-            )
-        }
-        entry<Route.History>(
-            metadata = ListDetailSceneStrategy.listPane(
-                detailPlaceholder = { com.example.vantink.presentation.components.PlaceholderScreen("Select a webtoon to view details") }
-            )
-        ) {
-            val viewModel: HistoryViewModel = viewModel {
-                HistoryViewModel(repository)
-            }
-            HistoryScreen(
-                viewModel = viewModel,
-                onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
-                onChapterClick = { webtoonId, chapterId ->
-                    navigator.navigate(Route.Reader(webtoonId, chapterId))
-                }
-            )
-        }
-        entry<Route.Downloads>(
-            metadata = ListDetailSceneStrategy.listPane(
-                detailPlaceholder = { com.example.vantink.presentation.components.PlaceholderScreen("Select a download to view") }
-            )
-        ) {
-            val viewModel: DownloadViewModel = viewModel {
-                DownloadViewModel(repository)
-            }
-            DownloadScreen(
-                viewModel = viewModel,
-                onChapterClick = { webtoonId, chapterId ->
-                    navigator.navigate(Route.Reader(webtoonId, chapterId))
-                },
+
+        entry<Route.Extensions> {
+            SourceScreen(
+                viewModel = viewModel { SourceViewModel(extensionRepository) },
                 onBack = { navigator.goBack() }
             )
         }
-        entry<Route.Details>(
-            metadata = ListDetailSceneStrategy.detailPane()
-        ) { key ->
-            val viewModel: DetailsViewModel = viewModel(key = key.webtoonId) {
-                DetailsViewModel(key.webtoonId, repository)
-            }
+
+        entry<Route.Directory> {
+            DirectoryScreen(
+                viewModel = viewModel { DirectoryViewModel(repository, client) },
+                onBack = { navigator.goBack() }
+            )
+        }
+
+        entry<Route.Details>(metadata = ListDetailSceneStrategy.detailPane()) { key ->
             DetailsScreen(
-                viewModel = viewModel,
-                onChapterClick = { webtoonId, chapterId ->
-                    navigator.navigate(Route.Reader(webtoonId, chapterId))
-                },
-                onWebClick = { url, title ->
-                    val finalUrl = if (url.startsWith("http")) url else "https://anilist.co/manga/$url"
+                viewModel = viewModel(key = key.webtoonId) { DetailsViewModel(key.webtoonId, repository) },
+                onChapterClick = { webtoonId, chapterId -> navigator.navigate(Route.Reader(webtoonId, chapterId)) },
+                onWebClick = { id, title ->
+                    val realId = if (id.contains("|")) id.substringAfter("|") else id
+                    val finalUrl = if (realId.startsWith("http")) realId else "https://anilist.co/manga/$realId"
                     navigator.navigate(Route.Web(finalUrl, title))
                 },
                 onBack = { navigator.goBack() }
             )
         }
+
         entry<Route.Reader> { key ->
-            val viewModel: ReaderViewModel = viewModel(key = key.chapterId) {
-                ReaderViewModel(key.webtoonId, key.chapterId, repository)
-            }
             ReaderScreen(
-                viewModel = viewModel,
+                viewModel = viewModel(key = key.chapterId) { ReaderViewModel(key.webtoonId, key.chapterId, repository) },
                 onBack = { navigator.goBack() }
             )
         }
-        entry<Route.Settings> {
-            SettingsScreen(
-                onSourcesClick = { navigator.navigate(Route.Sources) },
-                onDirectoryClick = { navigator.navigate(Route.Directory) },
-                onBack = { navigator.goBack() }
-            )
-        }
-        entry<Route.Sources> {
-            val viewModel: SourceViewModel = viewModel {
-                SourceViewModel(extensionRepository)
-            }
-            SourceScreen(
-                viewModel = viewModel,
-                onBack = { navigator.goBack() }
-            )
-        }
-        entry<Route.Directory> {
-            val viewModel: DirectoryViewModel = viewModel {
-                DirectoryViewModel(repository, client)
-            }
-            DirectoryScreen(
-                viewModel = viewModel,
-                onBack = { navigator.goBack() }
-            )
-        }
+
         entry<Route.Web> { key ->
-            WebScreen(
-                url = key.url,
-                title = key.title,
-                onBack = { navigator.goBack() }
-            )
+            WebScreen(url = key.url, title = key.title, onBack = { navigator.goBack() })
         }
     }
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             item(
-                label = { Text("Home") },
-                icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-                selected = navigationState.topLevelRoute == Route.Home,
-                onClick = { navigator.navigate(Route.Home) }
-            )
-            item(
-                label = { Text("Search") },
-                icon = { Icon(Icons.Rounded.Search, contentDescription = "Search") },
-                selected = navigationState.topLevelRoute == Route.Search,
-                onClick = { navigator.navigate(Route.Search) }
-            )
-            item(
                 label = { Text("Library") },
-                icon = { Icon(Icons.Rounded.Favorite, contentDescription = "Library") },
-                selected = navigationState.topLevelRoute == Route.Favorites,
-                onClick = { navigator.navigate(Route.Favorites) }
+                icon = { Icon(Icons.Rounded.CollectionsBookmark, null) },
+                selected = navigationState.topLevelRoute == Route.Library,
+                onClick = { navigator.navigate(Route.Library) }
             )
             item(
-                label = { Text("Downloads") },
-                icon = { Icon(Icons.Rounded.Download, contentDescription = "Downloads") },
-                selected = navigationState.topLevelRoute == Route.Downloads,
-                onClick = { navigator.navigate(Route.Downloads) }
+                label = { Text("Updates") },
+                icon = { Icon(Icons.Rounded.Update, null) },
+                selected = navigationState.topLevelRoute == Route.Updates,
+                onClick = { navigator.navigate(Route.Updates) }
             )
             item(
                 label = { Text("History") },
-                icon = { Icon(Icons.Rounded.History, contentDescription = "History") },
+                icon = { Icon(Icons.Rounded.History, null) },
                 selected = navigationState.topLevelRoute == Route.History,
                 onClick = { navigator.navigate(Route.History) }
+            )
+            item(
+                label = { Text("Browse") },
+                icon = { Icon(Icons.Rounded.Explore, null) },
+                selected = navigationState.topLevelRoute == Route.Browse,
+                onClick = { navigator.navigate(Route.Browse) }
+            )
+            item(
+                label = { Text("More") },
+                icon = { Icon(Icons.Rounded.MoreHoriz, null) },
+                selected = navigationState.topLevelRoute == Route.More,
+                onClick = { navigator.navigate(Route.More) }
             )
         }
     ) {
@@ -253,5 +198,12 @@ fun VantInkAppNavigation() {
                 sceneStrategy = listDetailStrategy
             )
         }
+    }
+}
+
+@Composable
+fun PlaceholderScreen(message: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+        Text(message, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

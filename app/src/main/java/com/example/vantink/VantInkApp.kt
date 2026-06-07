@@ -56,9 +56,10 @@ class VantInkApp : Application(), ImageLoaderFactory {
         com.example.vantink.data.local.AppPreferences.init(this)
         
         // Safety handler to log and prevent silent exit
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             android.util.Log.e("VantInkCrash", "Uncaught exception on thread ${thread.name}", throwable)
-            // No need to exit(1), Android will restart if it was a foreground crash
+            defaultHandler?.uncaughtException(thread, throwable)
         }
     }
 }

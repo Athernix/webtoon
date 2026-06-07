@@ -8,5 +8,8 @@ data class FavoriteEntity(
     @PrimaryKey val id: String, // webtoonId
     val title: String,
     val thumbnailUrl: String,
+    val contentType: String = "UNKNOWN", // ContentType enum name
+    val readingMode: String = "TOP_TO_BOTTOM", // ReadingMode enum name
+    val language: String = "en",
     val addedDate: Long = System.currentTimeMillis()
 )

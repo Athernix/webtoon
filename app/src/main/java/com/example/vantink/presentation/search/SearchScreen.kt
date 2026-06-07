@@ -242,6 +242,16 @@ fun FilterBottomSheet(
             }
             
             Button(
+                onClick = {
+                    onFilterChange(SearchFilter(query = currentFilter.query))
+                },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors()
+            ) {
+                Text("Reset Filters")
+            }
+            
+            Button(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
             ) {

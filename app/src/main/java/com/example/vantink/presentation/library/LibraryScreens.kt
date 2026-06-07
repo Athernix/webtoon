@@ -9,15 +9,17 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.vantink.data.local.entity.HistoryEntity
 import com.example.vantink.domain.model.Webtoon
@@ -30,24 +32,33 @@ fun FavoritesScreen(
     onWebtoonClick: (String) -> Unit
 ) {
     val favorites by viewModel.favorites.collectAsStateWithLifecycle()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Favorites") }
+            LargeTopAppBar(
+                title = { Text("Library") },
+                actions = {
+                    IconButton(onClick = { /* Sort */ }) { Icon(Icons.Rounded.Sort, null) }
+                    IconButton(onClick = { /* Filter */ }) { Icon(Icons.Rounded.FilterList, null) }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { innerPadding ->
         if (favorites.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text("No favorites yet")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Your library is empty", style = MaterialTheme.typography.titleMedium)
+                    Text("Add something from Browse", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(140.dp),
+                columns = GridCells.Adaptive(110.dp),
                 contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(innerPadding)
             ) {
                 items(favorites, key = { it.id }) { webtoon ->
@@ -77,7 +88,7 @@ fun HistoryScreen(
                 actions = {
                     if (history.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearHistory() }) {
-                            Icon(Icons.Rounded.Delete, contentDescription = "Clear History")
+                            Icon(Icons.Rounded.Delete, null)
                         }
                     }
                 }
@@ -86,7 +97,7 @@ fun HistoryScreen(
     ) { innerPadding ->
         if (history.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text("No reading history")
+                Text("No reading history", style = MaterialTheme.typography.bodyMedium)
             }
         } else {
             LazyColumn(
@@ -114,12 +125,12 @@ fun HistoryItem(
     onDelete: () -> Unit
 ) {
     ListItem(
-        headlineContent = { Text(item.title, fontWeight = FontWeight.Bold) },
+        headlineContent = { Text(item.title, fontWeight = FontWeight.Bold, maxLines = 1) },
         supportingContent = {
             Column {
-                Text("Chapter ${item.chapterNumber}: ${item.chapterTitle}")
+                Text("Chapter ${item.chapterNumber}: ${item.chapterTitle}", maxLines = 1)
                 Text(
-                    text = "Last read: ${java.text.DateFormat.getDateTimeInstance().format(item.lastReadDate)}",
+                    text = java.text.DateFormat.getDateTimeInstance().format(item.lastReadDate),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -129,13 +140,13 @@ fun HistoryItem(
             AsyncImage(
                 model = item.thumbnailUrl,
                 contentDescription = null,
-                modifier = Modifier.size(50.dp).clickable(onClick = onClick),
+                modifier = Modifier.size(56.dp).clip(MaterialTheme.shapes.small).clickable(onClick = onClick),
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
         },
         trailingContent = {
             IconButton(onClick = onDelete) {
-                Icon(Icons.Rounded.Delete, contentDescription = "Remove")
+                Icon(Icons.Rounded.Delete, null)
             }
         },
         modifier = Modifier.clickable(onClick = onChapterClick)

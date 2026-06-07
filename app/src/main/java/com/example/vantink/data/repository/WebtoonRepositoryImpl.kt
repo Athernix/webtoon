@@ -15,6 +15,9 @@ import com.example.vantink.data.local.entity.SourceEntity
 import com.example.vantink.data.mapper.toFavoriteEntity
 import com.example.vantink.data.mapper.toWebtoon
 import com.example.vantink.data.scraper.DownloadWorker
+import com.example.vantink.data.scraper.InMangaSource
+import com.example.vantink.data.scraper.MadaraSource
+import com.example.vantink.data.scraper.MangaStreamSource
 import com.example.vantink.data.scraper.Source
 import com.example.vantink.data.scraper.SourceFactory
 import com.example.vantink.domain.model.Chapter
@@ -23,7 +26,7 @@ import com.example.vantink.domain.model.SearchFilter
 import com.example.vantink.domain.model.Webtoon
 import com.example.vantink.domain.repository.WebtoonRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.map as flowMap
 
 class WebtoonRepositoryImpl(
     private val context: Context,
@@ -82,7 +85,11 @@ class WebtoonRepositoryImpl(
                     .firstOrNull { it.pkgName == sourceRef.pkgName }
                     ?: return Result.failure(IllegalStateException("La extension ${sourceRef.pkgName} ya no esta activa."))
 
-                val source = sourceFactory.create(extension.toSourceEntity())
+                val source = when (extension.sourceType) {
+                    "mangastream" -> MangaStreamSource(extension.name, extension.baseUrl)
+                    "inmanga" -> InMangaSource(com.example.vantink.di.ServiceLocator.getOkHttpClient())
+                    else -> MadaraSource(extension.name, extension.baseUrl)
+                }
                 val webtoon = source.getWebtoonDetails(sourceRef.realId)
                 Result.success(
                     webtoon.withSource(extension, sourceRef.realId)
@@ -107,7 +114,12 @@ class WebtoonRepositoryImpl(
                     .firstOrNull { it.pkgName == sourceRef.pkgName }
                     ?: return Result.failure(IllegalStateException("La extension ${sourceRef.pkgName} ya no esta activa."))
 
-                val pages = sourceFactory.create(extension.toSourceEntity()).getChapterPages(sourceRef.realId)
+                val source = when (extension.sourceType) {
+                    "mangastream" -> MangaStreamSource(extension.name, extension.baseUrl)
+                    "inmanga" -> InMangaSource(com.example.vantink.di.ServiceLocator.getOkHttpClient())
+                    else -> MadaraSource(extension.name, extension.baseUrl)
+                }
+                val pages = source.getChapterPages(sourceRef.realId)
                 Result.success(Chapter(id = id, webtoonId = sourceRef.pkgName, title = "Chapter", number = 0f, pages = pages))
             } else {
                 val pages = primarySource.getChapterPages(id)
@@ -118,12 +130,13 @@ class WebtoonRepositoryImpl(
         }
     }
 
-    override fun getFavorites(): Flow<List<Webtoon>> = webtoonDao.getFavorites().map { entities -> entities.map { it.toWebtoon() } }
+    override fun getFavorites(): Flow<List<Webtoon>> = webtoonDao.getFavorites().flowMap { entities -> entities.map { it.toWebtoon() } }
     override suspend fun addFavorite(webtoon: Webtoon) = webtoonDao.insertFavorite(webtoon.toFavoriteEntity())
     override suspend fun removeFavorite(webtoon: Webtoon) = webtoonDao.deleteFavorite(webtoon.toFavoriteEntity())
     override fun isFavorite(webtoonId: String): Flow<Boolean> = webtoonDao.isFavorite(webtoonId)
     override fun getHistory(): Flow<List<HistoryEntity>> = webtoonDao.getHistory()
     override suspend fun updateHistory(history: HistoryEntity) = webtoonDao.insertHistory(history)
+    override suspend fun updateScrollPosition(webtoonId: String, scrollPosition: Int) = webtoonDao.updateScrollPosition(webtoonId, scrollPosition)
     override suspend fun getHistoryForWebtoon(webtoonId: String): HistoryEntity? = webtoonDao.getHistoryForWebtoon(webtoonId)
     override suspend fun deleteHistory(webtoonId: String) = webtoonDao.deleteHistory(webtoonId)
     override suspend fun clearHistory() = webtoonDao.clearHistory()

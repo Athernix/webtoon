@@ -6,12 +6,14 @@ import com.example.vantink.data.remote.metadata.AniListApiService
 
 class SourceFactory(
     private val aniListApi: AniListApiService,
-    private val mangaDexApi: MangaDexApiService
+    private val mangaDexApi: MangaDexApiService,
+    private val client: okhttp3.OkHttpClient
 ) {
     fun create(entity: SourceEntity): Source {
         return when (entity.type) {
             "madara" -> MadaraSource(entity.name, entity.baseUrl)
             "mangastream" -> MangaStreamSource(entity.name, entity.baseUrl)
+            "inmanga" -> InMangaSource(client)
             "anilist_md" -> AniListMangaDexSource(aniListApi, mangaDexApi)
             else -> AniListMangaDexSource(aniListApi, mangaDexApi) // Default
         }

@@ -9,7 +9,10 @@ data class Webtoon(
     val thumbnailUrl: String = "",
     val status: String = "Unknown",
     val genres: List<String> = emptyList(),
-    val chapters: List<ChapterSummary> = emptyList()
+    val chapters: List<ChapterSummary> = emptyList(),
+    val contentType: ContentType = ContentType.UNKNOWN,
+    val readingMode: ReadingMode = ReadingMode.TOP_TO_BOTTOM,
+    val language: String = "en"
 )
 
 data class ChapterSummary(

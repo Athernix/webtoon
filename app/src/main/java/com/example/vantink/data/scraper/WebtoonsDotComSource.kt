@@ -48,7 +48,9 @@ class WebtoonsDotComSource : Source {
                 .get()
             
             val firstResult = doc.selectFirst(".card_lst li a")
-            val detailUrl = firstResult?.attr("href") ?: ""
+            val detailUrl = firstResult?.absUrl("href") ?: ""
+            
+            if (detailUrl.isEmpty()) throw Exception("No detail URL found")
             
             val detailDoc = Jsoup.connect(detailUrl)
                 .userAgent(userAgent)
@@ -60,12 +62,13 @@ class WebtoonsDotComSource : Source {
             val thumb = detailDoc.selectFirst(".detail_header .thmb img")?.attr("src") ?: ""
             
             val chapters = detailDoc.select("#_listUl li").map { element ->
-                val cId = element.attr("data-episode-no")
+                val link = element.selectFirst("a")
+                val cUrl = link?.absUrl("href") ?: ""
                 val cTitle = element.selectFirst(".subj span")?.text() ?: ""
                 val cNum = element.selectFirst(".tx")?.text()?.replace("#", "")?.toFloatOrNull() ?: 0f
                 val cDate = element.selectFirst(".date")?.text() ?: ""
                 
-                ChapterSummary(id = cId, title = cTitle, number = cNum, uploadDate = cDate)
+                ChapterSummary(id = cUrl, title = cTitle, number = cNum, uploadDate = cDate)
             }
 
             Webtoon(

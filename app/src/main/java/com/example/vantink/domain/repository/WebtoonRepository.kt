@@ -22,6 +22,7 @@ interface WebtoonRepository {
     // Local - History
     fun getHistory(): Flow<List<HistoryEntity>>
     suspend fun updateHistory(history: HistoryEntity)
+    suspend fun updateScrollPosition(webtoonId: String, scrollPosition: Int)
     suspend fun getHistoryForWebtoon(webtoonId: String): HistoryEntity?
     suspend fun deleteHistory(webtoonId: String)
     suspend fun clearHistory()
