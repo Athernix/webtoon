@@ -5,19 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.vantink.data.local.entity.HistoryEntity
 import com.example.vantink.domain.model.Webtoon
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class FavoritesViewModel(
+@HiltViewModel
+class FavoritesViewModel @Inject constructor(
     private val repository: WebtoonRepository
 ) : ViewModel() {
     val favorites: StateFlow<List<Webtoon>> = repository.getFavorites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
 
-class HistoryViewModel(
+@HiltViewModel
+class HistoryViewModel @Inject constructor(
     private val repository: WebtoonRepository
 ) : ViewModel() {
     val history: StateFlow<List<HistoryEntity>> = repository.getHistory()

@@ -1,17 +1,20 @@
 package com.example.vantink.presentation.details
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vantink.data.local.entity.DownloadEntity
 import com.example.vantink.domain.model.ChapterSummary
 import com.example.vantink.domain.model.Webtoon
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed interface DetailsUiState {
     data object Loading : DetailsUiState
@@ -19,10 +22,13 @@ sealed interface DetailsUiState {
     data class Error(val message: String) : DetailsUiState
 }
 
-class DetailsViewModel(
-    private val webtoonId: String,
+@HiltViewModel
+class DetailsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val repository: WebtoonRepository
 ) : ViewModel() {
+
+    private val webtoonId: String = checkNotNull(savedStateHandle["webtoonId"])
 
     private val _uiState = MutableStateFlow<DetailsUiState>(DetailsUiState.Loading)
     val uiState: StateFlow<DetailsUiState> = _uiState.asStateFlow()

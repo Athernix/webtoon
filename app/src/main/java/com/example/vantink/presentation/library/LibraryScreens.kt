@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.vantink.data.local.entity.HistoryEntity
@@ -28,7 +29,7 @@ import com.example.vantink.presentation.components.WebtoonCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
-    viewModel: FavoritesViewModel,
+    viewModel: FavoritesViewModel = hiltViewModel(),
     onWebtoonClick: (String) -> Unit
 ) {
     val favorites by viewModel.favorites.collectAsStateWithLifecycle()
@@ -75,7 +76,7 @@ fun FavoritesScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    viewModel: HistoryViewModel,
+    viewModel: HistoryViewModel = hiltViewModel(),
     onWebtoonClick: (String) -> Unit,
     onChapterClick: (String, String) -> Unit
 ) {

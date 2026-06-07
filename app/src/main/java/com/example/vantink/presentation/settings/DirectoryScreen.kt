@@ -19,12 +19,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirectoryScreen(
-    viewModel: DirectoryViewModel,
+    viewModel: DirectoryViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     val items by viewModel.items.collectAsState()

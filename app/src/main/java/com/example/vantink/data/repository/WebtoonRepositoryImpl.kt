@@ -25,12 +25,15 @@ import com.example.vantink.domain.model.ChapterSummary
 import com.example.vantink.domain.model.SearchFilter
 import com.example.vantink.domain.model.Webtoon
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map as flowMap
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class WebtoonRepositoryImpl(
-    private val context: Context,
-    private val primarySource: Source, // Usually AniList+MD
+@Singleton
+class WebtoonRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val sourceFactory: SourceFactory,
     private val webtoonDao: WebtoonDao,
     private val downloadDao: DownloadDao,
@@ -38,6 +41,10 @@ class WebtoonRepositoryImpl(
     private val repositoryDao: com.example.vantink.data.local.dao.RepositoryDao,
     private val activeExtensionDao: ActiveExtensionDao
 ) : WebtoonRepository {
+
+    private val primarySource: Source by lazy { 
+        sourceFactory.create(DEFAULT_META_PROVIDER.toSourceEntity())
+    }
 
     override suspend fun getWebtoons(filter: SearchFilter): Result<List<Webtoon>> {
         return try {

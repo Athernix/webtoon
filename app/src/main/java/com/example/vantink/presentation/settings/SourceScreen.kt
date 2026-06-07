@@ -67,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.vantink.domain.model.Extension
@@ -81,7 +82,7 @@ private val SoftRed = Color(0xFFFF5570)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SourceScreen(
-    viewModel: SourceViewModel,
+    viewModel: SourceViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

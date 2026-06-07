@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vantink.data.local.entity.SourceEntity
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
+import javax.inject.Inject
 
 data class DirectoryItem(
     val id: String,
@@ -22,7 +24,8 @@ data class DirectoryItem(
     val type: String
 )
 
-class DirectoryViewModel(
+@HiltViewModel
+class DirectoryViewModel @Inject constructor(
     private val repository: WebtoonRepository,
     private val client: OkHttpClient
 ) : ViewModel() {

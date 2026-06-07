@@ -8,8 +8,10 @@ import coil.memory.MemoryCache
 import com.example.vantink.di.ServiceLocator
 import com.example.vantink.domain.repository.ExtensionRepository
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 
+@HiltAndroidApp
 class VantInkApp : Application(), ImageLoaderFactory {
 
     val repository: WebtoonRepository

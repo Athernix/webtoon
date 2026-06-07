@@ -262,7 +262,28 @@ Documento que incluye:
 
 ---
 
-## 📊 ESTADÍSTICAS FINALES
+## 🚀 REFACTORIZACIÓN A CLEAN ARCHITECTURE + HILT (NUEVO)
+
+### 1. Inyección de Dependencias (Hilt)
+- ✨ **Configuración Global:** Implementado Hilt en `build.gradle.kts` (plugin y dependencias v2.59.2).
+- ✨ **NetworkModule:** Centraliza Retrofit, OkHttpClient y APIs (AniList, MangaDex).
+- ✨ **DatabaseModule:** Centraliza Room y DAOs.
+- ✨ **RepositoryModule:** Binds de interfaces a implementaciones.
+- ✨ **HiltAndroidApp:** `@HiltAndroidApp` agregado a `VantInkApp`.
+- ✨ **AndroidEntryPoint:** `@AndroidEntryPoint` agregado a `MainActivity`.
+
+### 2. Capa Domain (Clean Architecture)
+- ✨ **Usecases:** Creados `GetWebtoonsUseCase` y `GetWebtoonDetailsUseCase`.
+- ✨ **Modelos:** Estructura de paquetes organizada para separar modelos de dominio.
+
+### 3. Capa Presentation (MVVM + Hilt)
+- ✨ **ViewModels:** Migrados a `@HiltViewModel` con inyección de dependencias.
+- ✨ **Screens:** Actualizados para usar `hiltViewModel()` por defecto.
+- ✨ **Navigation:** Simplificado `MainActivity` eliminando instanciación manual de ViewModels.
+
+---
+
+## 📊 ESTADÍSTICAS ACTUALIZADAS
 
 ### Por Categoría de Cambio
 

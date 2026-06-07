@@ -3,8 +3,11 @@ package com.example.vantink.data.scraper
 import com.example.vantink.data.local.entity.SourceEntity
 import com.example.vantink.data.remote.MangaDexApiService
 import com.example.vantink.data.remote.metadata.AniListApiService
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class SourceFactory(
+@Singleton
+class SourceFactory @Inject constructor(
     private val aniListApi: AniListApiService,
     private val mangaDexApi: MangaDexApiService,
     private val client: okhttp3.OkHttpClient

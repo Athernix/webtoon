@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.vantink.domain.model.Chapter
@@ -26,7 +27,7 @@ import com.example.vantink.domain.model.Chapter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderScreen(
-    viewModel: ReaderViewModel,
+    viewModel: ReaderViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

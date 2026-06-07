@@ -19,8 +19,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ExtensionRepositoryImpl(
+@Singleton
+class ExtensionRepositoryImpl @Inject constructor(
     private val client: OkHttpClient,
     private val sourceFactory: SourceFactory,
     private val activeExtensionDao: ActiveExtensionDao

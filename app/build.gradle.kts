@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -80,6 +81,7 @@ dependencies {
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.common)
     implementation(libs.androidx.paging.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
     testImplementation(libs.androidx.core)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -92,4 +94,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     "ksp"(libs.androidx.room.compiler)
     "ksp"(libs.moshi.kotlin.codegen)
+    implementation(libs.hilt.android)
+    "ksp"(libs.hilt.compiler)
 }

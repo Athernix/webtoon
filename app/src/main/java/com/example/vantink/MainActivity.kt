@@ -39,7 +39,9 @@ import com.example.vantink.presentation.search.SearchScreen
 import com.example.vantink.presentation.search.SearchViewModel
 import com.example.vantink.presentation.settings.*
 import com.example.vantink.ui.theme.VantInkTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,10 +62,6 @@ fun VantInkAppNavigation() {
         topLevelRoutes = setOf(Route.Library, Route.Updates, Route.History, Route.Browse, Route.More)
     )
     val navigator = remember { Navigator(navigationState) }
-    val app = (LocalContext.current.applicationContext as VantInkApp)
-    val repository = app.repository
-    val extensionRepository = app.extensionRepository
-    val client = app.okHttpClient
 
     val windowAdaptiveInfo = currentWindowAdaptiveInfo()
     val directive = remember(windowAdaptiveInfo) {
@@ -75,7 +73,6 @@ fun VantInkAppNavigation() {
     val entryProvider = entryProvider<NavKey> {
         entry<Route.Library>(metadata = ListDetailSceneStrategy.listPane()) {
             FavoritesScreen(
-                viewModel = viewModel { FavoritesViewModel(repository) },
                 onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) }
             )
         }
@@ -86,16 +83,13 @@ fun VantInkAppNavigation() {
 
         entry<Route.History>(metadata = ListDetailSceneStrategy.listPane()) {
             HistoryScreen(
-                viewModel = viewModel { HistoryViewModel(repository) },
                 onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
                 onChapterClick = { webtoonId, chapterId -> navigator.navigate(Route.Reader(webtoonId, chapterId)) }
             )
         }
 
         entry<Route.Browse>(metadata = ListDetailSceneStrategy.listPane()) {
-            val viewModel: HomeViewModel = viewModel { HomeViewModel(repository) }
             HomeScreen(
-                viewModel = viewModel,
                 onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
                 onSearchClick = { navigator.navigate(Route.Search) },
                 onSettingsClick = { navigator.navigate(Route.Extensions) }
@@ -112,7 +106,6 @@ fun VantInkAppNavigation() {
 
         entry<Route.Search> {
             SearchScreen(
-                viewModel = viewModel { SearchViewModel(repository) },
                 onWebtoonClick = { id -> navigator.navigate(Route.Details(id)) },
                 onBack = { navigator.goBack() }
             )
@@ -120,21 +113,18 @@ fun VantInkAppNavigation() {
 
         entry<Route.Extensions> {
             SourceScreen(
-                viewModel = viewModel { SourceViewModel(extensionRepository) },
                 onBack = { navigator.goBack() }
             )
         }
 
         entry<Route.Directory> {
             DirectoryScreen(
-                viewModel = viewModel { DirectoryViewModel(repository, client) },
                 onBack = { navigator.goBack() }
             )
         }
 
-        entry<Route.Details>(metadata = ListDetailSceneStrategy.detailPane()) { key ->
+        entry<Route.Details>(metadata = ListDetailSceneStrategy.detailPane()) { 
             DetailsScreen(
-                viewModel = viewModel(key = key.webtoonId) { DetailsViewModel(key.webtoonId, repository) },
                 onChapterClick = { webtoonId, chapterId -> navigator.navigate(Route.Reader(webtoonId, chapterId)) },
                 onWebClick = { id, title ->
                     val realId = if (id.contains("|")) id.substringAfter("|") else id
@@ -145,9 +135,8 @@ fun VantInkAppNavigation() {
             )
         }
 
-        entry<Route.Reader> { key ->
+        entry<Route.Reader> { 
             ReaderScreen(
-                viewModel = viewModel(key = key.chapterId) { ReaderViewModel(key.webtoonId, key.chapterId, repository) },
                 onBack = { navigator.goBack() }
             )
         }

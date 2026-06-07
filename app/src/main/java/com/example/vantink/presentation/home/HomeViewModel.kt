@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.vantink.domain.model.SearchFilter
 import com.example.vantink.domain.model.Webtoon
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState
@@ -16,7 +18,8 @@ sealed interface HomeUiState {
     data class Error(val message: String) : HomeUiState
 }
 
-class HomeViewModel(
+@HiltViewModel
+class HomeViewModel @Inject constructor(
     private val repository: WebtoonRepository
 ) : ViewModel() {
 

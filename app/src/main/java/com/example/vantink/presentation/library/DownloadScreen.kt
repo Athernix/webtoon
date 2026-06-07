@@ -15,11 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadScreen(
-    viewModel: DownloadViewModel,
+    viewModel: DownloadViewModel = hiltViewModel(),
     onChapterClick: (String, String) -> Unit,
     onBack: () -> Unit
 ) {

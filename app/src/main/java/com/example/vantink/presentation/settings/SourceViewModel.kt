@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.vantink.domain.model.Extension
 import com.example.vantink.domain.model.Webtoon
 import com.example.vantink.domain.repository.ExtensionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed interface ExtensionUiState {
     data object Loading : ExtensionUiState
@@ -29,7 +31,8 @@ sealed interface ExploreUiState {
 }
 
 @OptIn(FlowPreview::class)
-class SourceViewModel(
+@HiltViewModel
+class SourceViewModel @Inject constructor(
     private val repository: ExtensionRepository
 ) : ViewModel() {
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.vantink.data.local.entity.DownloadEntity
@@ -27,7 +28,7 @@ import com.example.vantink.domain.model.Webtoon
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
-    viewModel: DetailsViewModel,
+    viewModel: DetailsViewModel = hiltViewModel(),
     onChapterClick: (String, String) -> Unit,
     onWebClick: (String, String) -> Unit,
     onBack: () -> Unit

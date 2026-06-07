@@ -1,5 +1,6 @@
 package com.example.vantink.presentation.reader
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vantink.data.local.entity.HistoryEntity
@@ -7,6 +8,7 @@ import com.example.vantink.domain.model.Chapter
 import com.example.vantink.domain.model.ReadingMode
 import com.example.vantink.domain.model.ContentType
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URL
+import javax.inject.Inject
 
 sealed interface ReaderUiState {
     data object Loading : ReaderUiState
@@ -27,12 +30,15 @@ sealed interface ReaderUiState {
     data class Error(val message: String) : ReaderUiState
 }
 
-class ReaderViewModel(
-    private val webtoonId: String,
-    private val chapterId: String,
-    private val repository: WebtoonRepository,
-    private val contentType: ContentType = ContentType.UNKNOWN
+@HiltViewModel
+class ReaderViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val repository: WebtoonRepository
 ) : ViewModel() {
+
+    private val webtoonId: String = checkNotNull(savedStateHandle["webtoonId"])
+    private val chapterId: String = checkNotNull(savedStateHandle["chapterId"])
+    private val contentType: ContentType = ContentType.valueOf(savedStateHandle.get<String>("contentType") ?: ContentType.UNKNOWN.name)
 
     private val _uiState = MutableStateFlow<ReaderUiState>(ReaderUiState.Loading)
     val uiState: StateFlow<ReaderUiState> = _uiState.asStateFlow()

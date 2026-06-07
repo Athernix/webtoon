@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vantink.data.local.entity.DownloadEntity
 import com.example.vantink.domain.repository.WebtoonRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class DownloadViewModel(
+@HiltViewModel
+class DownloadViewModel @Inject constructor(
     private val repository: WebtoonRepository
 ) : ViewModel() {
     val downloads: StateFlow<List<DownloadEntity>> = repository.getAllDownloads()
